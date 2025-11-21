@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Crypto Wallet - کیف پول واقعی ارز دیجیتال</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #1e40af;
+            --secondary: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+        
+        .site-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        
+        .auth-section, .main-section {
+            background: white;
+            border-radius: 25px;
+            padding: 50px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            margin-bottom: 30px;
+        }
+        
+        .main-section {
+            display: none;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        input, select, button, textarea {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        button {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(30, 64, 175, 0.3);
+        }
+        
+        .balance-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .balance-card {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        
+        .balance-card.eth { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .balance-card.btc { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .balance-card.bnb { background: linear-gradient(135deg, #f0b90b 0%, #f0b90b 100%); }
+        .balance-card.total { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
+        
+        .balance-amount {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 15px 0;
+        }
+        
+        .balance-value {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .alert {
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 50px;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f4f6;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .action-box {
+            background: #f8fafc;
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .stats-box {
+            background: #f8fafc;
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            height: 300px;
+        }
+        
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            background: white;
+            margin-bottom: 10px;
+            border-radius: 12px;
+        }
+        
+        .real-badge {
+            background: var(--success);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .bonus-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">💎</div>
+            <h1 class="site-title">Real Crypto Wallet</h1>
+            <p style="font-size: 1.3rem; opacity: 0.9;">کیف پول واقعی با موجودی واقعی و انتقال REAL</p>
+            <p style="margin-top: 10px; font-size: 1.1rem;">
+                🎁 10 بیت‌کوین واقعی + 10 اتریوم واقعی + 100 BNB + 50,000 USDT
+            </p>
+        </div>
+
+        <!-- بخش احراز هویت -->
+        <div class="auth-section" id="authSection">
+            <h2 style="text-align: center; margin-bottom: 40px; font-size: 2rem;">🔐 ایجاد کیف پول REAL</h2>
+            
+            <div class="form-group">
+                <label>ایمیل (اختیاری):</label>
+                <input type="email" id="email" placeholder="email@example.com">
+            </div>
+            
+            <div class="form-group">
+                <label>کد معرف (اختیاری):</label>
+                <input type="text" id="referralCode" placeholder="کد دوست خود را وارد کنید">
+            </div>
+            
+            <button onclick="createWallet()" style="font-size: 1.2rem; padding: 18px;">
+                💎 ایجاد کیف پول REAL با موجودی رایگان
+            </button>
+            
+            <div style="margin-top: 30px; padding: 20px; background: #f0f9ff; border-radius: 12px; text-align: center;">
+                <h3>🎁 موجودی رایگان شما پس از ثبت‌نام:</h3>
+                <p>• 10 بیت‌کوین (BTC) • 10 اتریوم (ETH) • 100 BNB</p>
+                <p>• 50,000 تتر (USDT) • 50,000 USDC • 50,000 ADA</p>
+                <p>• 5,000 DOT • 500 سولانا (SOL) • 100,000 XRP</p>
+            </div>
+        </div>
+
+        <!-- بخش اصلی -->
+        <div class="main-section" id="mainSection">
+            <!-- هدر -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; flex-wrap: wrap; gap: 20px;">
+                <div>
+                    <h2 style="font-size: 2rem;">💰 کیف پول REAL شما</h2>
+                    <p id="walletInfo" style="color: #6b7280; margin-top: 5px;"></p>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <button onclick="claimDailyBonus()" class="bonus-btn" style="width: auto; padding: 12px 25px;">
+                        🎁 دریافت پاداش روزانه
+                    </button>
+                    <button onclick="logout()" style="width: auto; background: var(--danger); padding: 12px 25px;">
+                        🚪 خروج
+                    </button>
+                </div>
+            </div>
+
+            <!-- کارت‌های موجودی -->
+            <div class="balance-cards">
+                <div class="balance-card btc">
+                    <h3>₿ بیت‌کوین</h3>
+                    <div class="balance-amount" id="btcBalance">0</div>
+                    <div class="balance-value" id="btcValue">$0</div>
+                </div>
+                <div class="balance-card eth">
+                    <h3>🔷 اتریوم</h3>
+                    <div class="balance-amount" id="ethBalance">0</div>
+                    <div class="balance-value" id="ethValue">$0</div>
+                </div>
+                <div class="balance-card bnb">
+                    <h3>💛 BNB</h3>
+                    <div class="balance-amount" id="bnbBalance">0</div>
+                    <div class="balance-value" id="bnbValue">$0</div>
+                </div>
+                <div class="balance-card total">
+                    <h3>💎 کل دارایی</h3>
+                    <div class="balance-amount" id="totalBalance">$0</div>
+                    <div class="balance-value">ارزش کل پرتفولیو</div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- بخش انتقال -->
+                <div class="action-box">
+                    <h3 style="margin-bottom: 25px;">📤 انتقال REAL ارز</h3>
+                    
+                    <div class="form-group">
+                        <label>انتقال ارز:</label>
+                        <select id="transferCurrency">
+                            <option value="BTC">₿ بیت‌کوین (BTC)</option>
+                            <option value="ETH">🔷 اتریوم (ETH)</option>
+                            <option value="BNB">💛 BNB</option>
+                            <option value="USDT">💵 تتر (USDT)</option>
+                            <option value="USDC">🔵 USDC</option>
+                            <option value="ADA">ADA</option>
+                            <option value="DOT">DOT</option>
+                            <option value="SOL">سولانا (SOL)</option>
+                            <option value="XRP">XRP</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>آدرس مقصد:</label>
+                        <input type="text" id="toAddress" placeholder="آدرس کیف پول مقصد" dir="ltr">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>مبلغ:</label>
+                        <input type="number" id="transferAmount" placeholder="0.00" step="0.000001">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>کلید خصوصی:</label>
+                        <input type="password" id="privateKey" placeholder="کلید خصوصی خود را وارد کنید" dir="ltr">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>شبکه:</label>
+                        <select id="transferNetwork">
+                            <option value="mainnet">شبکه اصلی (Mainnet)</option>
+                            <option value="testnet">شبکه تست (Testnet)</option>
+                        </select>
+                    </div>
+                    
+                    <button onclick="transferFunds()" style="font-size: 1.1rem;">
+                        ⚡ انتقال REAL ارز
+                    </button>
+                </div>
+
+                <!-- آمار و نمودار -->
+                <div class="stats-box">
+                    <h3 style="margin-bottom: 25px;">📊 آمار لحظه‌ای</h3>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <p>💰 ارزش کل: <strong id="statsTotalValue">$0</strong></p>
+                        <p>📈 تعداد ارزها: <strong>9 ارز</strong></p>
+                        <p>🎯 وضعیت: <span class="real-badge">REAL</span></p>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="portfolioChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تاریخچه تراکنش‌ها -->
+            <div style="margin-top: 40px;">
+                <h3 style="margin-bottom: 25px;">📋 تاریخچه تراکنش‌های REAL</h3>
+                <div id="transactionsList">
+                    <div class="transaction-item">
+                        <div style="text-align: center; color: #6b7280; width: 100%; padding: 40px;">
+                            📝 هیچ تراکنشی یافت نشد
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- آلرت‌ها -->
+            <div id="alertContainer" style="margin-top: 30px;"></div>
+        </div>
+
+        <!-- لودینگ -->
+        <div class="loading" id="loadingSection">
+            <div class="spinner"></div>
+            <p style="font-size: 1.2rem; margin-top: 20px;" id="loadingText">در حال پردازش...</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let currentUser = null;
+        let prices = {};
+        let portfolioChart = null;
+
+        // ایجاد کیف پول جدید
+        async function createWallet() {
+            const email = document.getElementById('email').value;
+            const referralCode = document.getElementById('referralCode').value;
+
+            showLoading(true, 'در حال ایجاد کیف پول REAL...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/wallet/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, referralCode })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('walletAddress', data.wallet.address);
+                    localStorage.setItem('privateKey', data.wallet.privateKey);
+                    localStorage.setItem('mnemonic', data.wallet.mnemonic);
+                    
+                    showAlert(
+                        `🎉 کیف پول REAL ایجاد شد!<br>
+                         <strong>آدرس:</strong> ${data.wallet.address}<br>
+                         <strong>کلید خصوصی:</strong> ${data.wallet.privateKey}<br>
+                         <strong>عبارت بازیابی:</strong> ${data.wallet.mnemonic}<br>
+                         <span style="color: var(--danger);">🔒 این اطلاعات را در جای امن ذخیره کنید!</span>`,
+                        'success'
+                    );
+                    
+                    showMainSection();
+                    loadWalletData();
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                showAlert('خطا در ایجاد کیف پول: ' + error.message, 'error');
+            }
+            showLoading(false);
+        }
+
+        // بارگذاری اطلاعات کیف پول
+        async function loadWalletData() {
+            const address = localStorage.getItem('walletAddress');
+            if (!address) return;
+
+            showLoading(true, 'در حال دریافت اطلاعات REAL...');
+            
+            try {
+                const [balanceResponse, pricesResponse] = await Promise.all([
+                    fetch(`${API_BASE}/balance/${address}`),
+                    fetch(`${API_BASE}/prices`)
+                ]);
+                
+                const balanceData = await balanceResponse.json();
+                const pricesData = await pricesResponse.json();
+                
+                if (balanceData.success && pricesData.success) {
+                    currentUser = { walletAddress: address };
+                    prices = pricesData.prices;
+                    updateBalances(balanceData.balances);
+                    updateWalletInfo();
+                    loadTransactions();
+                    createPortfolioChart(balanceData.balances);
+                } else {
+                    throw new Error('خطا در دریافت اطلاعات');
+                }
+            } catch (error) {
+                showAlert('خطا در دریافت اطلاعات: ' + error.message, 'error');
+            }
+            showLoading(false);
+        }
+
+        // بروزرسانی موجودی‌ها
+        function updateBalances(balances) {
+            // بروزرسانی کارت‌ها
+            document.getElementById('btcBalance').textContent = balances.BTC.toFixed(6);
+            document.getElementById('ethBalance').textContent = balances.ETH.toFixed(4);
+            document.getElementById('bnbBalance').textContent = balances.BNB.toFixed(2);
+            
+            // محاسبه ارزش‌ها
+            const btcValue = balances.BTC * (prices.BTC || 45000);
+            const ethValue = balances.ETH * (prices.ETH || 2500);
+            const bnbValue = balances.BNB * (prices.BNB || 300);
+            const totalValue = btcValue + ethValue + bnbValue;
+            
+            document.getElementById('btcValue').textContent = `$${formatNumber(btcValue)}`;
+            document.getElementById('ethValue').textContent = `$${formatNumber(ethValue)}`;
+            document.getElementById('bnbValue').textContent = `$${formatNumber(bnbValue)}`;
+            document.getElementById('totalBalance').textContent = `$${formatNumber(totalValue)}`;
+            document.getElementById('statsTotalValue').textContent = `$${formatNumber(totalValue)}`;
+        }
+
+        // انتقال ارز
+        async function transferFunds() {
+            const currency = document.getElementById('transferCurrency').value;
+            const toAddress = document.getElementById('toAddress').value;
+            const amount = parseFloat(document.getElementById('transferAmount').value);
+            const privateKey = document.getElementById('privateKey').value;
+            const network = document.getElementById('transferNetwork').value;
+            const fromAddress = localStorage.getItem('walletAddress');
+
+            if (!toAddress || !amount || !privateKey) {
+                return showAlert('لطفا تمام فیلدها را پر کنید', 'error');
+            }
+
+            showLoading(true, 'در حال انجام انتقال REAL...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/transfer`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fromAddress,
+                        toAddress,
+                        amount,
+                        currency,
+                        privateKey,
+                        network
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert(
+                        `✅ انتقال REAL موفق!<br>
+                         ${amount} ${currency} به آدرس ${toAddress.substring(0, 12)}... انتقال یافت<br>
+                         <a href="${data.explorerUrl}" target="_blank" style="color: var(--success);">مشاهده در explorer</a>`,
+                        'success'
+                    );
+                    
+                    // پاک کردن فیلدها
+                    document.getElementById('toAddress').value = '';
+                    document.getElementById('transferAmount').value = '';
+                    document.getElementById('privateKey').value = '';
+                    
+                    // بروزرسانی موجودی
+                    loadWalletData();
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                showAlert('خطا در انتقال: ' + error.message, 'error');
+            }
+            showLoading(false);
+        }
+
+        // دریافت پاداش روزانه
+        async function claimDailyBonus() {
+            const address = localStorage.getItem('walletAddress');
+            
+            showLoading(true, 'در حال دریافت پاداش...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/claim-daily-bonus`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ walletAddress: address })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert(
+                        `🎁 ${data.message}<br>
+                         پاداش ${data.bonus.amount} ${data.bonus.currency} دریافت شد!`,
+                        'success'
+                    );
+                    loadWalletData();
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                showAlert('خطا در دریافت پاداش: ' + error.message, 'error');
+            }
+            showLoading(false);
+        }
+
+        // بارگذاری تراکنش‌ها
+        async function loadTransactions() {
+            const address = localStorage.getItem('walletAddress');
+            
+            try {
+                const response = await fetch(`${API_BASE}/transactions/${address}`);
+                const data = await response.json();
+                
+                if (data.success && data.transactions.length > 0) {
+                    const container = document.getElementById('transactionsList');
+                    container.innerHTML = data.transactions.map(tx => `
+                        <div class="transaction-item">
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 5px;">
+                                    ${tx.type === 'bonus' ? '🎁 پاداش' : '📤 انتقال'} ${tx.currency}
+                                </div>
+                                <div style="font-size: 0.9rem; color: #6b7280;">
+                                    ${new Date(tx.timestamp).toLocaleString('fa-IR')}
+                                    ${tx.txHash ? ` • TX: ${tx.txHash.substring(0, 16)}...` : ''}
+                                </div>
+                            </div>
+                            <div style="text-align: left;">
+                                <div style="font-weight: 700; color: ${tx.type === 'bonus' ? 'var(--success)' : 'var(--danger)'};">
+                                    ${tx.type === 'bonus' ? '+' : '-'}${tx.amount} ${tx.currency}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+            }
+        }
+
+        // ایجاد نمودار پرتفولیو
+        function createPortfolioChart(balances) {
+            const ctx = document.getElementById('portfolioChart').getContext('2d');
+            
+            if (portfolioChart) {
+                portfolioChart.destroy();
+            }
+
+            const labels = [];
+            const data = [];
+            const backgroundColors = [
+                '#8B5CF6', '#3B82F6', '#F59E0B', '#10B981', 
+                '#F97316', '#EF4444', '#06B6D4', '#84CC16', '#8B5CF6'
+            ];
+
+            for (const [currency, balance] of Object.entries(balances)) {
+                if (balance > 0) {
+                    labels.push(currency);
+                    data.push(balance * (prices[currency] || 1));
+                }
+            }
+
+            portfolioChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            rtl: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // نمایش بخش اصلی
+        function showMainSection() {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('mainSection').style.display = 'block';
+        }
+
+        // بروزرسانی اطلاعات کاربر
+        function updateWalletInfo() {
+            const address = localStorage.getItem('walletAddress');
+            document.getElementById('walletInfo').textContent = `آدرس: ${address}`;
+        }
+
+        // خروج
+        function logout() {
+            localStorage.clear();
+            document.getElementById('mainSection').style.display = 'none';
+            document.getElementById('authSection').style.display = 'block';
+            showAlert('با موفقیت از سیستم خارج شدید', 'success');
+        }
+
+        // نمایش لودینگ
+        function showLoading(show, text = 'در حال پردازش...') {
+            const loadingSection = document.getElementById('loadingSection');
+            const loadingText = document.getElementById('loadingText');
+            
+            loadingText.textContent = text;
+            loadingSection.style.display = show ? 'block' : 'none';
+        }
+
+        // نمایش آلرت
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.innerHTML = message;
+            container.appendChild(alert);
+            
+            setTimeout(() => alert.remove(), 8000);
+        }
+
+        // فرمت اعداد
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(2) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(2) + 'K';
+            }
+            return num.toFixed(2);
+        }
+
+        // بررسی وضعیت ورود
+        window.addEventListener('load', () => {
+            const address = localStorage.getItem('walletAddress');
+            if (address) {
+                showMainSection();
+                loadWalletData();
+            }
+        });
+    </script>
+</body>
+</html>
